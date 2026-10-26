@@ -1,11 +1,10 @@
 package bootcamp.hibernate_practical.service;
 
-import bootcamp.hibernate_practical.dto.BookResponse;
-import bootcamp.hibernate_practical.dto.CreateBookRequest;
-import bootcamp.hibernate_practical.dto.UpdateBookRequest;
 import bootcamp.hibernate_practical.entity.Book;
 import bootcamp.hibernate_practical.repository.BookRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -17,59 +16,39 @@ public class BookService {
         this.bookRepository = bookRepository;
     }
 
-    public BookResponse createBook(CreateBookRequest request) {
-        Book book = new Book(
-                request.getTitle(),
-                request.getAuthor(),
-                request.getGenre(),
-                request.getPublicationYear(),
-                true
-        );
-        Book savedBook = bookRepository.save(book);
-        return mapToResponse(savedBook);
+    public Book createBook(Book request) {
+        // Copy only input fields so a client-supplied ID cannot update a book.
+        Book book = new Book(request.getTitle(), request.getAuthor(), request.getPublicationYear());
+        return bookRepository.save(book);
     }
 
-    public List<BookResponse> getAllBooks() {
-        // TODO:
-        // Fetch all books from the repository
-        // Convert each Book entity into BookResponse DTO
-        // Return the list
-        return null;
+    public List<Book> getAllBooks() {
+        return bookRepository.findAll();
     }
 
-    public BookResponse getBookById(Long id) {
-        // TODO
-        // Find the book by its ID
-        // Throw RuntimeException if not found
-        // Convert the entity to BookResponse
-        return null;
-    }
-
-    public BookResponse updateBook(Long id, UpdateBookRequest request) {
-        // TODO
-        // Find existing book
-        // Update its fields
-        // Save the updated entity
-        // Convert to BookResponse
-        return null;
+    public Book getBookById(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Book with ID " + id + " was not found"));
     }
 
     public void deleteBook(Long id) {
-        // TODO
+        Book book = getBookById(id);
+        bookRepository.delete(book);
     }
 
-    public List<BookResponse> findByAuthor(String author) {
-        // TODO
-        return null;
+    public List<Book> findByAuthor(String author) {
+        if (author.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Author must not be blank");
+        }
+        return bookRepository.findByAuthorContainingIgnoreCase(author.trim());
     }
 
-    public List<BookResponse> findAvailableBooks(){
-        // TODO
-        return null;
+    public List<Book> findPublishedAfter(Integer year) {
+        return bookRepository.findByPublicationYearGreaterThan(year);
     }
 
-    private BookResponse mapToResponse(Book book) {
-        // TODO: map Book to BookResponse
-        return null;
+    public long countBooks() {
+        return bookRepository.count();
     }
 }
