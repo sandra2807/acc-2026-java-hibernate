@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local credentials, persisted H2 data, and JVM crash reports
+.env
+.env.*
+!.env.example
+data/
+application-local.properties
